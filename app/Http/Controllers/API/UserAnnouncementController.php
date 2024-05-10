@@ -15,14 +15,14 @@ class UserAnnouncementController extends Controller
      */
     public function index(Request $request) : JsonResponse
     {
-
+        // Validate the incoming request data
         $validator = Validator::make($request->all(), [
             'per_page'  => ['nullable', 'integer', 'min:1'],
         ]);
 
-        $perPage = $request->input('per_page');
+        $perPage = $request->input('per_page'); //request field for per_page pagination user wants
 
-        $announcements = Announcement::orderBy('date')->orderBy('time')->paginate($perPage);
+        $announcements = Announcement::orderBy('date')->orderBy('time')->paginate($perPage); //pagination using per page data
 
         return response()->json($announcements);
 
@@ -35,7 +35,8 @@ class UserAnnouncementController extends Controller
     {
         $announcement = Announcement::findOrFail($id);
 
-        $announcement->status = 'V'; // status updated to Visible when viewed by user
+        // updating status to Visible when viewed by user
+        $announcement->status = 'V'; // V = Visible
         $announcement->save();
 
         return response()->json($announcement);

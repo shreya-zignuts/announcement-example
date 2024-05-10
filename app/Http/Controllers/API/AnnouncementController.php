@@ -20,17 +20,14 @@ class AnnouncementController extends Controller
     {
         // Validate the incoming request data
         $validator = Validator::make($request->all(), [
-            'filter' => ['nullable', Rule::in(['all', 'past', 'upcoming'])], // Validate the 'filter' parameter
-            'per_page' => ['nullable', 'integer', 'min:1'], // Validate the 'per_page' parameter
+            'filter'    => ['nullable', Rule::in(['all', 'past', 'upcoming'])], // Validate the 'filter' parameter
+            'per_page'  => ['nullable', 'integer', 'min:1'], // Validate the 'per_page' parameter
         ]);
 
         // Redirect back with errors if validation fails
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
         }
-
-        // Get validated data or set defaults
-        $filter = $request->input('filter');
 
         $perPage = $request->input('per_page');
 
@@ -40,14 +37,14 @@ class AnnouncementController extends Controller
         // Initialize query builder
         $query = Announcement::query();
 
-        // Apply filter conditions
-        if ($filter === 'past') {
+        // Apply filter conditions for past and upcoming events
+        if ($request->input('filter') === 'past') {
             $query->where(function ($q) use ($currentDateTime) {
                 $q->where('date', '<', $currentDateTime->toDateString())->orWhere(function ($q2) use ($currentDateTime) {
                     $q2->where('date', '=', $currentDateTime->toDateString())->where('time', '<', $currentDateTime->toTimeString());
                 });
             });
-        } elseif ($filter === 'upcoming') {
+        } elseif ($request->input('filter') === 'upcoming') {
             $query->where(function ($q) use ($currentDateTime) {
                 $q->where('date', '>', $currentDateTime->toDateString())->orWhere(function ($q2) use ($currentDateTime) {
                     $q2->where('date', '=', $currentDateTime->toDateString())->where('time', '>=', $currentDateTime->toTimeString());
@@ -66,7 +63,8 @@ class AnnouncementController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        $validatedData = $request->validate([
+        // Validate the incoming request data
+        $validator = $request->validate([
             'message'   => 'required|string|max:255',
             'date'      => 'required|date|after_or_equal:today',
             'time'      => 'required|date_format:H:i',
@@ -74,7 +72,7 @@ class AnnouncementController extends Controller
 
         $announcement = new Announcement($request->only(['message', 'date', 'time']));
 
-        $announcement->save();
+        $announcement->save(); //storing announcement in database
 
         return response()->json(['message' => 'Announcement created successfully', 'announcement' => $announcement], 201);
     }
@@ -93,24 +91,22 @@ class AnnouncementController extends Controller
      */
     public function update(Request $request, $id): JsonResponse
     {
+        // Validate the incoming request data
         $validator = Validator::make($request->all(), [
             'message'   => 'required|string|max:255',
-            'date'      => 'required|date',
+            'date'      => 'required|date|after_or_equal:today',
             'time'      => 'required|date_format:H:i',
         ]);
 
+        // filter and checks time, if time passed then show error
         $validator->after(function ($validator) use ($request, $id) {
-            $date = $request->input('date');
-            $time = $request->input('time');
 
-            $dateTime = Carbon::parse($date . ' ' . $time);
-            $now = Carbon::now();
-
-            // dd($now);
             $announcement = Announcement::findOrFail($id);
-            $announcementDateTime = Carbon::parse($announcement->date . ' ' . $announcement->time);
 
-            if ($dateTime < $now || $announcementDateTime < $now) {
+            $now = Carbon::now(); //present time
+            $announcementDateTime = Carbon::parse($announcement->date . ' ' . $announcement->time); //date and time present in database
+
+            if ($announcementDateTime < $now) {
                 $validator->errors()->add('Announcement', 'Past announcements cannot be edited');
             }
         });
@@ -120,7 +116,7 @@ class AnnouncementController extends Controller
         }
 
         $announcement = Announcement::findOrFail($id);
-        $announcement->update($request->only(['message', 'date', 'time']));
+        $announcement->update($request->only(['message', 'date', 'time'])); //updating database value if validation passes
 
         return response()->json(['message' => 'Announcement updated successfully', 'announcement' => $announcement]);
     }
@@ -128,7 +124,7 @@ class AnnouncementController extends Controller
     /**
      * Remove the specified announcement from storage.
      */
-    public function delete(Request $request, $id) : JsonResponse
+    public function delete(Request $request, $id): JsonResponse
     {
         $request->validate([
             'forceDelete' => 'nullable|boolean',
@@ -136,13 +132,15 @@ class AnnouncementController extends Controller
 
         $announcement = Announcement::findOrFail($id);
 
-        $dateTime = Carbon::parse($announcement->date . ' ' . $announcement->time);
-        $now = Carbon::now();
+        $now = Carbon::now(); //present time
+        $announcementDateTime = Carbon::parse($announcement->date . ' ' . $announcement->time); //date and time present in database
 
-        if ($dateTime < $now) {
-            return response()->json(['error' => 'Past Announcement cannot be deleted.']);
+        // filter and checks time, if time passed then show error
+        if ($announcementDateTime < $now) {
+            return response()->json(['error' => 'Cannot Delete Past Announcement']);
         }
 
+        // condition for force and soft delete as per user request
         if ($request->has('forceDelete')) {
             $announcement->forceDelete();
         } else {
