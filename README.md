@@ -40,7 +40,7 @@ Step 1: Clone the Repository
 Clone the repository to your local machine using Git.
 
 ```bash
-$ git clone https://github.com/shreya-zignuts/user-role-permission-crm.git
+$ git clone https://github.com/shreya-zignuts/announcement-example.git
 ```
 
 Step 2: Navigate to the Project Directory
@@ -48,7 +48,7 @@ Step 2: Navigate to the Project Directory
 Change your current directory to the project directory.
 
 ```bash
-$ cd user-permission-crm
+$ cd feature-announcement
 ```
 
 Step 3: Install Composer Dependencies
@@ -94,18 +94,6 @@ DB_PORT=3306
 DB_DATABASE=your_database_name
 DB_USERNAME=your_database_username
 DB_PASSWORD=your_database_password
-```
-
-Configure your mail connection in the .env file.
-
-```make
-MAIL_MAILER=smtp
-MAIL_HOST=sandbox.smtp.mailtrap.io
-MAIL_PORT=2525
-MAIL_USERNAME=your_username
-MAIL_PASSWORD=your_password
-MAIL_FROM_ADDRESS=null
-MAIL_FROM_NAME=null
 ```
 
 Step 8: Run Migrations and Seeders
