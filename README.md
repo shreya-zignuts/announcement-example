@@ -6,18 +6,18 @@ The feature allows admins to create, edit, and delete announcements, subject to 
 
 ## Features
 
-# Authentication:
+### Authentication:
 - User Authentication: Users and admins are required to authenticate to access their respective functionalities.
 - Role-Based Access Control: Differentiate between user and admin roles to restrict access accordingly.
 
-# Admin Features:
+### Admin Features:
 - Create Announcement
 - Edit Announcement:
     Past announcements are locked from editing.
 - Delete Announcement:
     Admins can delete announcements, preferably before they expire.
 
-# User Features:
+### User Features:
 - View Announcements List:
         Users can see a list of announcements.
         Announcements are filtered based on visibility (e.g., not expired).
